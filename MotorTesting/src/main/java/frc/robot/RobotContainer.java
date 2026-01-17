@@ -19,7 +19,7 @@ public class RobotContainer implements Sendable {
   double m2v = 0.0;
 
   public RobotContainer() {
-    SmartDashboard.putData(this);
+    SmartDashboard.putData("Motors", this);
     // Config motors
     
   }
@@ -36,7 +36,10 @@ public class RobotContainer implements Sendable {
   @Override
   public void initSendable(SendableBuilder builder) {
     // ADD MOTOR SETUFF HERE
-    builder.addDoubleProperty("Motor 1 Volts", () -> m1v, (val) -> {m1v = val; motor1.setVoltage(val);});
-    builder.addDoubleProperty("Motor 1 Volts", () -> m2v, (val) -> {m2v = val; motor2.setVoltage(val);});
+    builder.addDoubleProperty("Motor 1 Volts", () -> m1v, (val) -> {
+      m1v = val; 
+      motor1.setVoltage(val);
+    });
+    builder.addDoubleProperty("Motor 2 Volts", () -> m2v, (val) -> {m2v = val; motor2.setVoltage(val);});
   }
 }
