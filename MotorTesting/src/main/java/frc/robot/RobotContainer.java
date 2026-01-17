@@ -4,28 +4,24 @@
 
 package frc.robot;
 
-import java.io.File;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.ExampleSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.util.Constants;
-import frc.robot.util.FieldPointDisplay;
-import frc.robot.util.stateStuff.StatefulSubsystem;
 
 public class RobotContainer implements Sendable {
-
-  // public final SwerveSubsystem swerve = new SwerveSubsystem(
-  // new File(Filesystem.getDeployDirectory(), "johnSwerve")); //TODO: UPDATE
-  // SWERVE CONFIGS
+  final SparkMax motor1 = new SparkMax(1, MotorType.kBrushless);
+  double m1v = 0.0;
+  final SparkMax motor2 = new SparkMax(2, MotorType.kBrushless);
+  double m2v = 0.0;
 
   public RobotContainer() {
     SmartDashboard.putData(this);
+    // Config motors
+    
   }
 
   /**
@@ -40,5 +36,7 @@ public class RobotContainer implements Sendable {
   @Override
   public void initSendable(SendableBuilder builder) {
     // ADD MOTOR SETUFF HERE
+    builder.addDoubleProperty("Motor 1 Volts", () -> m1v, (val) -> {m1v = val; motor1.setVoltage(val);});
+    builder.addDoubleProperty("Motor 1 Volts", () -> m2v, (val) -> {m2v = val; motor2.setVoltage(val);});
   }
 }
