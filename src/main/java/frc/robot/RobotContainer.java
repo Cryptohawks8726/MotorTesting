@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -19,6 +21,7 @@ public class RobotContainer implements Sendable {
 
   int queuedCanID = 1;
   MotorModels queuedMotorModel = MotorModels.SparkMax;
+  ArrayList<Long> usedCanIDs = new ArrayList<>();
 
   public RobotContainer() {
     SmartDashboard.putData("Add Motors", this);
@@ -34,13 +37,32 @@ public class RobotContainer implements Sendable {
   }
 
   public void createNewMotor() {
-    switch (queuedMotorModel) {
-      case SparkMax:
-        SparkMaxWrapper wrapper = new SparkMaxWrapper(queuedCanID);
-        SmartDashboard.putData("Motors/" + queuedCanID, wrapper);
-        break;
-      default:
-        break;
+    if (!usedCanIDs.contains((long) queuedCanID)) {
+      switch (queuedMotorModel) {
+        case SparkMax:
+          SparkMaxWrapper wrapper = new SparkMaxWrapper(queuedCanID);
+          SmartDashboard.putData("Motors/" + queuedCanID, wrapper);
+          // IMPORTANT NOTE: Thie synchronized block prevents a (rare)
+          // ConcurrentModificationException.
+          synchronized (usedCanIDs) {
+            usedCanIDs.add((long) queuedCanID);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  public long[] getUsedCanIds() {
+    // IMPORTANT NOTE: Thie synchronized block prevents a (rare)
+    // ConcurrentModificationException.
+    synchronized (usedCanIDs) {
+      long[] out = new long[usedCanIDs.size()];
+      for (int i = 0; i < out.length; i++) {
+        out[i] = usedCanIDs.get(i);
+      }
+      return out;
     }
   }
 
@@ -75,6 +97,8 @@ public class RobotContainer implements Sendable {
         createNewMotor();
       }
     });
+
+    builder.addIntegerArrayProperty("Used CAN IDs", this::getUsedCanIds, null);
 
   }
 }

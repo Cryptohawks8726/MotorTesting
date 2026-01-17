@@ -8,6 +8,15 @@
     "transitory": {
       "SmartDashboard": {
         "Add Motors": {
+          "open": true,
+          "string[]##v_/SmartDashboard/Add Motors/Motor Types": {
+            "open": true
+          }
+        },
+        "Motors": {
+          "1": {
+            "open": true
+          },
           "open": true
         },
         "open": true
