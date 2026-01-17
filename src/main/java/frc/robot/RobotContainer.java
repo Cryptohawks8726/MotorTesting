@@ -4,24 +4,24 @@
 
 package frc.robot;
 
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.motors.SparkMaxWrapper;
 
 public class RobotContainer implements Sendable {
-  final SparkMax motor1 = new SparkMax(1, MotorType.kBrushless);
-  double m1v = 0.0;
-  final SparkMax motor2 = new SparkMax(2, MotorType.kBrushless);
-  double m2v = 0.0;
+  // List of the different types of motors that are supported
+  public enum MotorModels {
+    SparkMax,
+    // TODO: add more... ?
+  }
+
+  int queuedCanID = 1;
+  MotorModels queuedMotorModel = MotorModels.SparkMax;
 
   public RobotContainer() {
-    SmartDashboard.putData("Motors", this);
-    // Config motors
-    
+    SmartDashboard.putData("Add Motors", this);
   }
 
   /**
@@ -33,13 +33,48 @@ public class RobotContainer implements Sendable {
     return null;
   }
 
+  public void createNewMotor() {
+    switch (queuedMotorModel) {
+      case SparkMax:
+        SparkMaxWrapper wrapper = new SparkMaxWrapper(queuedCanID);
+        SmartDashboard.putData("Motors/" + queuedCanID, wrapper);
+        break;
+      default:
+        break;
+    }
+  }
+
   @Override
   public void initSendable(SendableBuilder builder) {
-    // ADD MOTOR SETUFF HERE
-    builder.addDoubleProperty("Motor 1 Volts", () -> m1v, (val) -> {
-      m1v = val; 
-      motor1.setVoltage(val);
+    // Interface for adding motors of different types at certain CAN IDs
+    // does java have a map function?
+    MotorModels[] models = MotorModels.values();
+    String[] motorTypeNames = new String[models.length];
+    for (int i = 0; i < models.length; i++) {
+      motorTypeNames[i] = models[i].name();
+    }
+    builder.publishConstStringArray("Motor Types", motorTypeNames);
+
+    builder.addIntegerProperty("CAN ID", () -> queuedCanID, (v) -> {
+      if (v > 0 && v < 60) {
+        queuedCanID = (int) v;
+      }
     });
-    builder.addDoubleProperty("Motor 2 Volts", () -> m2v, (val) -> {m2v = val; motor2.setVoltage(val);});
+
+    builder.addStringProperty("Motor Type", () -> queuedMotorModel.name(), (v) -> {
+      try {
+        queuedMotorModel = MotorModels.valueOf(v);
+      } catch (Exception e) {
+        // set nothing
+      }
+    });
+
+    // When this flips to true it will create a new motor in NT
+    builder.addBooleanProperty("publish", () -> false, (v) -> {
+      if (v) {
+        createNewMotor();
+      }
+    });
+
   }
 }
