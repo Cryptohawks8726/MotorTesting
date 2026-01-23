@@ -21,7 +21,7 @@ public class RobotContainer implements Sendable {
 
   int queuedCanID = 1;
   MotorModels queuedMotorModel = MotorModels.SparkMax;
-  ArrayList<Long> usedCanIDs = new ArrayList<>();
+  final ArrayList<Long> usedCanIDs = new ArrayList<>();
 
   public RobotContainer() {
     SmartDashboard.putData("Add Motors", this);
@@ -37,25 +37,29 @@ public class RobotContainer implements Sendable {
   }
 
   public void createNewMotor() {
+    // Avoids a ConcurrentModificationException (it turns out something else
+    // was throwing it, but this can't hurt.)
+    synchronized (usedCanIDs) {
     if (!usedCanIDs.contains((long) queuedCanID)) {
       switch (queuedMotorModel) {
         case SparkMax:
           SparkMaxWrapper wrapper = new SparkMaxWrapper(queuedCanID);
-          SmartDashboard.putData("Motors/" + queuedCanID, wrapper);
-          // IMPORTANT NOTE: Thie synchronized block prevents a (rare)
-          // ConcurrentModificationException.
-          synchronized (usedCanIDs) {
+          // NOTE: This avoid a common ConcurrentModificationException
+          // due to updating the HashMap of NT table paths to Sendable objects
+          // during the updateValues() loop.
+          SmartDashboard.postListenerTask(() -> 
+          SmartDashboard.putData("Motors/" + queuedCanID, wrapper));
             usedCanIDs.add((long) queuedCanID);
-          }
           break;
         default:
           break;
       }
     }
   }
+  }
 
   public long[] getUsedCanIds() {
-    // IMPORTANT NOTE: Thie synchronized block prevents a (rare)
+    // IMPORTANT NOTE: Thie synchronized block prevents a
     // ConcurrentModificationException.
     synchronized (usedCanIDs) {
       long[] out = new long[usedCanIDs.size()];
@@ -99,6 +103,5 @@ public class RobotContainer implements Sendable {
     });
 
     builder.addIntegerArrayProperty("Used CAN IDs", this::getUsedCanIds, null);
-
   }
 }
