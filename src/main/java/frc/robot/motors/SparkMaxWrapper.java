@@ -12,7 +12,7 @@ public class SparkMaxWrapper extends MotorWrapper {
 
     public SparkMaxWrapper(int canID) {
         motor = new SparkMax(canID, MotorType.kBrushless);
-        encoder = motor.getAlternateEncoder();
+        encoder = motor.getEncoder();
     }
 
     @Override
