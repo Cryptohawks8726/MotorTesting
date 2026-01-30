@@ -11,11 +11,13 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.motors.SparkMaxWrapper;
+import frc.robot.motors.TalonWrapper;
 
 public class RobotContainer implements Sendable {
   // List of the different types of motors that are supported
   public enum MotorModels {
     SparkMax,
+    TalonFX,
     // TODO: add more... ?
   }
 
@@ -40,22 +42,25 @@ public class RobotContainer implements Sendable {
     // Avoids a ConcurrentModificationException (it turns out something else
     // was throwing it, but this can't hurt.)
     synchronized (usedCanIDs) {
-    if (!usedCanIDs.contains((long) queuedCanID)) {
-      switch (queuedMotorModel) {
-        case SparkMax:
-          SparkMaxWrapper wrapper = new SparkMaxWrapper(queuedCanID);
-          // NOTE: This avoid a common ConcurrentModificationException
-          // due to updating the HashMap of NT table paths to Sendable objects
-          // during the updateValues() loop.
-          SmartDashboard.postListenerTask(() -> 
-          SmartDashboard.putData("Motors/" + queuedCanID, wrapper));
+      if (!usedCanIDs.contains((long) queuedCanID)) {
+        switch (queuedMotorModel) {
+          case SparkMax:
+            SparkMaxWrapper wrapper = new SparkMaxWrapper(queuedCanID);
+            // NOTE: This avoid a common ConcurrentModificationException
+            // due to updating the HashMap of NT table paths to Sendable objects
+            // during the updateValues() loop.
+            SmartDashboard.postListenerTask(() -> SmartDashboard.putData("Motors/" + queuedCanID, wrapper));
             usedCanIDs.add((long) queuedCanID);
-          break;
-        default:
-          break;
+            break;
+          case TalonFX:
+            var talonWrapper = new TalonWrapper(queuedCanID);
+            SmartDashboard.postListenerTask(() -> SmartDashboard.putData("Motors/" + queuedCanID, talonWrapper));
+            usedCanIDs.add((long) queuedCanID);
+          default:
+            break;
+        }
       }
     }
-  }
   }
 
   public long[] getUsedCanIds() {
