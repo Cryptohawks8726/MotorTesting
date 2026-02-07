@@ -18,8 +18,8 @@ public class TalonWrapper extends MotorWrapper {
 
     public TalonWrapper(int id) {
         talon = new TalonFX(id);
-        pos = talon.getPosition();
-        vel = talon.getVelocity();
+        pos = talon.getPosition(false);
+        vel = talon.getVelocity(false);
         // probably dont need configs.
     }
 
@@ -36,11 +36,13 @@ public class TalonWrapper extends MotorWrapper {
 
     @Override
     public double getEncderPos() {
+        pos.refresh();
         return pos.getValue().in(Degrees);
     }
 
     @Override
     public double getEncoderVelocity() {
+        vel.refresh();
         return vel.getValue().in(RPM);
     }
 
