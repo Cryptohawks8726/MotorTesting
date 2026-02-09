@@ -114,6 +114,9 @@ public class RobotContainer implements Sendable {
   }
 
   public void saveNewMusicToFile(byte[] bytes) {
+    if (bytes.length == 0) {
+      return;
+    }
     File file = getMusicFile();
     try {
       Files.write(Paths.get(file.getAbsolutePath()), bytes, StandardOpenOption.WRITE,
