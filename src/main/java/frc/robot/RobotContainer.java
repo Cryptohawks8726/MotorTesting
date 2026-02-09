@@ -4,10 +4,20 @@
 
 package frc.robot;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+
+import com.ctre.phoenix6.Orchestra;
+import com.ctre.phoenix6.StatusCode;
 
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.motors.SparkMaxWrapper;
@@ -24,6 +34,7 @@ public class RobotContainer implements Sendable {
   int queuedCanID = 1;
   MotorModels queuedMotorModel = MotorModels.SparkMax;
   final ArrayList<Long> usedCanIDs = new ArrayList<>();
+  final Orchestra orchestra = new Orchestra();
 
   public RobotContainer() {
     SmartDashboard.putData("Add Motors", this);
@@ -54,6 +65,9 @@ public class RobotContainer implements Sendable {
             break;
           case TalonFX:
             var talonWrapper = new TalonWrapper(queuedCanID);
+            // motors get auto added to the orchestra.
+            // dw about it :3
+            orchestra.addInstrument(talonWrapper.getTalon());
             SmartDashboard.postListenerTask(() -> SmartDashboard.putData("Motors/" + queuedCanID, talonWrapper));
             usedCanIDs.add((long) queuedCanID);
           default:
@@ -72,6 +86,41 @@ public class RobotContainer implements Sendable {
         out[i] = usedCanIDs.get(i);
       }
       return out;
+    }
+  }
+
+  public File getMusicFile() {
+    File deployDir = Filesystem.getDeployDirectory();
+    return new File(deployDir.getAbsolutePath() + "/music.chrp");
+  }
+
+  public void tryStartMusic() {
+    File file = getMusicFile();
+    if (!file.exists()) {
+      return;
+    }
+    StatusCode loadStatus = orchestra.loadMusic(file.getAbsolutePath());
+    if (loadStatus.isError()) {
+      return;
+    }
+
+    orchestra.play();
+  }
+
+  public void stopMusic() {
+    if (orchestra.isPlaying()) {
+      orchestra.stop();
+    }
+  }
+
+  public void saveNewMusicToFile(byte[] bytes) {
+    File file = getMusicFile();
+    try {
+      Files.write(Paths.get(file.getAbsolutePath()), bytes, StandardOpenOption.WRITE,
+          StandardOpenOption.CREATE,
+          StandardOpenOption.TRUNCATE_EXISTING);
+    } catch (Exception e) {
+      return;
     }
   }
 
@@ -108,5 +157,18 @@ public class RobotContainer implements Sendable {
     });
 
     builder.addIntegerArrayProperty("Used CAN IDs", this::getUsedCanIds, null);
+
+    // music stuff
+    builder.addRawProperty("music", "audio file", () -> new byte[0], this::saveNewMusicToFile);
+    builder.addBooleanProperty("play", () -> false, (v) -> {
+      if (v) {
+        tryStartMusic();
+      }
+    });
+    builder.addBooleanProperty("stop", () -> false, (v) -> {
+      if (v) {
+        stopMusic();
+      }
+    });
   }
 }

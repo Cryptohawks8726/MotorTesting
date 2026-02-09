@@ -46,4 +46,7 @@ public class TalonWrapper extends MotorWrapper {
         return vel.getValue().in(RPM);
     }
 
+    public TalonFX getTalon() {
+        return talon;
+    }
 }
