@@ -162,7 +162,7 @@ public class RobotContainer implements Sendable {
     builder.addIntegerArrayProperty("Used CAN IDs", this::getUsedCanIds, null);
 
     // music stuff
-    builder.addRawProperty("music", "audio file", () -> new byte[0], this::saveNewMusicToFile);
+    builder.addRawProperty("music", "raw", () -> new byte[0], this::saveNewMusicToFile);
     builder.addBooleanProperty("play", () -> false, (v) -> {
       if (v) {
         tryStartMusic();
