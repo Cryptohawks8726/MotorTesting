@@ -10,7 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.StatusCode;
@@ -35,6 +38,7 @@ public class RobotContainer implements Sendable {
   MotorModels queuedMotorModel = MotorModels.SparkMax;
   final ArrayList<Long> usedCanIDs = new ArrayList<>();
   final Orchestra orchestra = new Orchestra();
+  Optional<File> musicFile = Optional.empty();
 
   public RobotContainer() {
     SmartDashboard.putData("Add Motors", this);
@@ -89,13 +93,19 @@ public class RobotContainer implements Sendable {
     }
   }
 
-  public File getMusicFile() {
-    File deployDir = Filesystem.getDeployDirectory();
-    return new File(deployDir.getAbsolutePath() + "/music.chrp");
+  public void createMusicFile() {
+    try {
+      musicFile = Optional.of(Files.createTempFile("music", ".chrp").toFile());
+    } catch (Exception e) {
+      // ignore errors
+    }
   }
 
   public void tryStartMusic() {
-    File file = getMusicFile();
+    if (musicFile.isEmpty()) {
+      return;
+    }
+    File file = musicFile.get();
     if (!file.exists()) {
       return;
     }
@@ -117,10 +127,15 @@ public class RobotContainer implements Sendable {
     if (bytes.length == 0) {
       return;
     }
-    File file = getMusicFile();
+    if (musicFile.isEmpty()) {
+      createMusicFile();
+      if (musicFile.isEmpty()) {
+        return; // there was an error, this failed.
+      }
+    }
+    File file = musicFile.get();
     try {
       Files.write(Paths.get(file.getAbsolutePath()), bytes, StandardOpenOption.WRITE,
-          StandardOpenOption.CREATE,
           StandardOpenOption.TRUNCATE_EXISTING);
     } catch (Exception e) {
       return;
